@@ -16,12 +16,12 @@ class CanalBroadcast(Canal):
         '''
         Envia un mensaje a los canales de salida de los vecinos.
         '''
-        # Tu código aquí
-        for vecino in vecinos:
-        # Obtiene el canal de entrada del vecino
-            vecino.canal_entrada = vecino.getCanal_entrada()
-        # Envia el mensaje al canal de entrada del vecino
-            yield self.env.process(vecino.canal_entrada.put(mensaje))
+        if self.canales == []:
+            return
+	
+        for canal in len(self.canales):
+            if canal in vecinos:
+                self.canales[canal].put(mensaje)
 
     def crea_canal_de_entrada(self):
         '''
