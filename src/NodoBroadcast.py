@@ -20,4 +20,13 @@ class NodoBroadcast(Nodo):
     def broadcast(self, env):
         ''' Algoritmo de Broadcast. Desde el nodo distinguido (0)
             vamos a enviar un mensaje a todos los demás nodos.'''
-        print("hola")
+        data="sus"
+        if self.id_nodo == 0:
+            self.canal_salida.envia(data,self.vecinos)
+            yield env.timeout(TICK)
+        while (True):
+            mensaje = yield self.canal_entrada.get()
+            if data == self.mensaje:
+                self.canal_salida.envia(mensaje,self.vecinos)
+    
+

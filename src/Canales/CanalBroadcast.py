@@ -16,10 +16,12 @@ class CanalBroadcast(Canal):
         '''
         Envia un mensaje a los canales de salida de los vecinos.
         '''
+        # verificamos que nustros canales no sean vacios
         if self.canales == []:
             return
-	
-        for canal in len(self.canales):
+        # verificamos que canales pertenecen a los vecinos y
+        # mandamos el mensaje a cada vecino
+        for canal in range(len(self.canales)):
             if canal in vecinos:
                 self.canales[canal].put(mensaje)
 
