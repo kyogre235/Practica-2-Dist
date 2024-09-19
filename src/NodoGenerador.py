@@ -20,37 +20,44 @@ class NodoGenerador(Nodo):
     
     def genera_arbol(self, env):
         
+        # Si es el nodo raíz, inicia el flooding enviando un mensaje a sus vecinos
         if self.padre == 0:
-            mensaje = [self.id_nodo,"Go"]
-            self.canal_salida.envia(mensaje,self.vecinos)
+            mensaje = [self.id_nodo, "Go"]
+            self.canal_salida.envia(mensaje, self.vecinos)
             yield env.timeout(TICK)
-        
 
         while(True):
             mensaje = yield self.canal_entrada.get()
-            data = mensaje[1]
-            if data == "Go":
+            tipo_mensaje = mensaje[1]
+
+            if tipo_mensaje == "Go":
+                # Si el nodo no tiene padre, significa que es la primera vez que recibe el mensaje
                 if self.padre is None:
-                    self.padre = mensaje[0]
+                    self.padre = mensaje[0]  # Asignamos el nodo que envió "Go" como padre
                     self.mensajes_esperados -= 1
+
+                    # Si ya no esperamos más mensajes, enviamos "Back" a nuestro padre
                     if self.mensajes_esperados == 0:
-                        mensaje = [self.id_nodo,"Back"]
-                        self.canal_salida.envia(mensaje,[self.padre])
+                        mensaje_back = [self.id_nodo, "Back"]
+                        self.canal_salida.envia(mensaje_back, [self.padre])
                     else:
+                        # Propagamos el mensaje "Go" a nuestros vecinos, excepto al que lo envió
                         for vecino in self.vecinos:
                             if vecino != mensaje[0]:
-                                mensaje = [self.id_nodo,"Go"]
-                                self.canal_salida.envia(mensaje,[vecino])
+                                mensaje_go = [self.id_nodo, "Go"]
+                                self.canal_salida.envia(mensaje_go, [vecino])
                 else:
-                    mensaje = [None,"Back"]
-                    self.canal_salida.envia(mensaje,[mensaje[0]])
+                    # Si ya tiene padre, rechazamos el mensaje reenviando "Back" vacío
+                    mensaje_back = [None, "Back"]
+                    self.canal_salida.envia(mensaje_back, [mensaje[0]])
 
-            elif tipo == "Back":
+            elif tipo_mensaje == "Back":
                 self.mensajes_esperados -= 1
-                mensaje = yield self.canal_entrada.get()
-                if mensaje[0] != None:
+                # Si el mensaje es de un hijo válido, lo agregamos a la lista de hijos
+                if mensaje[0] is not None and mensaje[0] != self.id_nodo:
                     self.hijos.append(mensaje[0])
-                if self.mensajes_esperados == 0:
-                    if self.padre != self.id_nodo:
-                        mensaje = [self.id_nodo,"Back"]
-                        self.canal_salida.envia(mensaje,self.padre)
+
+                # Cuando ya no esperamos más mensajes, enviamos "Back" a nuestro padre
+                if self.mensajes_esperados == 0 and self.padre is not None:
+                    mensaje_back = [self.id_nodo, "Back"]
+                    self.canal_salida.envia(mensaje_back, [self.padre])
